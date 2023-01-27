@@ -4,7 +4,7 @@
 
 Implementation of <a href="https://google-research.github.io/seanet/musiclm/examples/">MusicLM</a>, Google's new SOTA model for music generation using attention networks, in Pytorch.
 
-They are basically using text-conditioned <a href="https://github.com/lucidrains/audiolm-pytorch">AudioLM</a>, but surprisingly with the embeddings from a new text-audio contrastive learned model, which they named MuLan. MuLan is what will be built out in this repository, with AudioLM modified from the other repository to support the music generation needs here.
+They are basically using text-conditioned <a href="https://github.com/lucidrains/audiolm-pytorch">AudioLM</a>, but surprisingly with the embeddings from a text-audio contrastive learned model named <a href="https://arxiv.org/abs/2208.12415">MuLan</a>. MuLan is what will be built out in this repository, with AudioLM modified from the other repository to support the music generation needs here.
 
 ## Citations
 
@@ -15,5 +15,15 @@ They are basically using text-conditioned <a href="https://github.com/lucidrains
     journal = {ArXiv},
     year    = {2021},
     volume  = {abs/2103.16091}
+}
+```
+
+```bibtex
+@article{Huang2022MuLanAJ,
+    title   = {MuLan: A Joint Embedding of Music Audio and Natural Language},
+    author  = {Qingqing Huang and Aren Jansen and Joonseok Lee and Ravi Ganti and Judith Yue Li and Daniel P. W. Ellis},
+    journal = {ArXiv},
+    year    = {2022},
+    volume  = {abs/2208.12415}
 }
 ```
