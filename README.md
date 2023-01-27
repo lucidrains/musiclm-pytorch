@@ -1,3 +1,5 @@
+<img src="./musiclm.png" width="450px"></img>
+
 ## MusicLM - Pytorch (wip)
 
 Implementation of <a href="https://google-research.github.io/seanet/musiclm/examples/">MusicLM</a>, Google's new SOTA model for music generation using attention networks, in Pytorch.
