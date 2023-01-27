@@ -1,6 +1,8 @@
 ## MusicLM - Pytorch (wip)
 
-Implementation of <a href="https://google-research.github.io/seanet/musiclm/examples/">MusicLM</a>, Google's new SOTA model for music generation using attention networks, in Pytorch
+Implementation of <a href="https://google-research.github.io/seanet/musiclm/examples/">MusicLM</a>, Google's new SOTA model for music generation using attention networks, in Pytorch.
+
+They are basically using text-conditioned <a href="https://github.com/lucidrains/audiolm-pytorch">AudioLM</a>, but also have a surprising text audio contrastive learned model for filtering, which they named MuLan. MuLan is what will be built out in this repository, with AudioLM modified from the other repository to support the music generation needs here.
 
 ## Citations
 
