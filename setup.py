@@ -19,7 +19,9 @@ setup(
     'contrastive learning'
   ],
   install_requires=[
+    'audiolm-pytorch',
     'einops>=0.4',
+    'vector-quantize-pytorch>=0.10.15',
     'torch>=1.6',
   ],
   classifiers=[
