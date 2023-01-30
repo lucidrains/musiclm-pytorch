@@ -53,11 +53,7 @@ class Attention(nn.Module):
     def forward(
         self,
         x,
-        context = None,
-        mask = None,
-        attn_bias = None,
-        prefix_context = None,
-        prefix_context_mask = None
+        mask = None
     ):
         b, n, _, device = *x.shape, x.device
 

@@ -6,6 +6,10 @@ Implementation of <a href="https://google-research.github.io/seanet/musiclm/exam
 
 They are basically using text-conditioned <a href="https://github.com/lucidrains/audiolm-pytorch">AudioLM</a>, but surprisingly with the embeddings from a text-audio contrastive learned model named <a href="https://arxiv.org/abs/2208.12415">MuLan</a>. MuLan is what will be built out in this repository, with AudioLM modified from the other repository to support the music generation needs here.
 
+## Appreciation
+
+- <a href="https://stability.ai/">Stability.ai</a> for the generous sponsorship to work and open source cutting edge artificial intelligence research
+
 ## Citations
 
 ```bibtex
