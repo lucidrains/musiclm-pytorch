@@ -1,1 +1,1 @@
-from musiclm_pytorch.musiclm_pytorch import MuLaN
+from musiclm_pytorch.musiclm_pytorch import MuLaN, MusicLM

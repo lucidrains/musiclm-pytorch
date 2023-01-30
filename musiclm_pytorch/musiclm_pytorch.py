@@ -2,12 +2,23 @@ import torch
 import torch.nn.functional as F
 from torch import nn, einsum
 
-from einops import rearrange, repeat, reduce
+from x_clip.tokenizer import tokenizer
+from vector_quantize_pytorch import ResidualVQ
+
+from einops import rearrange, repeat, reduce, pack, unpack
 
 # functions
 
 def exists(val):
     return val is not None
+
+# tensor functions
+
+def log(t, eps = 1e-20):
+    return torch.log(t.clamp(min = eps))
+
+def l2norm(t):
+    return F.normalize(t, p = 2, dim = -1)
 
 # biasless layernorm
 
@@ -15,7 +26,7 @@ class LayerNorm(nn.Module):
     def __init__(self, dim):
         super().__init__()
         self.gamma = nn.Parameter(torch.ones(dim))
-        self.register_buffer("beta", torch.zeros(dim))
+        self.register_buffer('beta', torch.zeros(dim))
 
     def forward(self, x):
         return F.layer_norm(x, x.shape[-1:], self.gamma, self.beta)
@@ -152,6 +163,8 @@ class MuLaN(nn.Module):
 
     def forward(self, x):
         return x
+
+# music lm
 
 class MusicLM(nn.Module):
     def __init__(self):

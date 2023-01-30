@@ -22,6 +22,7 @@ setup(
     'audiolm-pytorch',
     'einops>=0.4',
     'vector-quantize-pytorch>=0.10.15',
+    'x-clip',
     'torch>=1.6',
     'torchaudio'
   ],
