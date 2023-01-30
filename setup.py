@@ -23,6 +23,7 @@ setup(
     'einops>=0.4',
     'vector-quantize-pytorch>=0.10.15',
     'torch>=1.6',
+    'torchaudio'
   ],
   classifiers=[
     'Development Status :: 4 - Beta',
