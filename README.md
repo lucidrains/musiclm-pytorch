@@ -13,12 +13,10 @@ They are basically using text-conditioned <a href="https://github.com/lucidrains
 ## Citations
 
 ```bibtex
-@article{Mittal2021SymbolicMG,
-    title   = {Symbolic Music Generation with Diffusion Models},
-    author  = {Gautam Mittal and Jesse Engel and Curtis Hawthorne and Ian Simon},
-    journal = {ArXiv},
-    year    = {2021},
-    volume  = {abs/2103.16091}
+@inproceedings{Agostinelli2023MusicLMGM,
+  title     = {MusicLM: Generating Music From Text},
+  author    = {Andrea Agostinelli and Timo I. Denk and Zal{\'a}n Borsos and Jesse Engel and Mauro Verzetti and Antoine Caillon and Qingqing Huang and Aren Jansen and Adam Roberts and Marco Tagliasacchi and Matthew Sharifi and Neil Zeghidour and C. Frank},
+  year      = {2023}
 }
 ```
 
