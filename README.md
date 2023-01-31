@@ -42,11 +42,20 @@ mulan = MuLaN(
     text_transformer = text_transformer
 )
 
-texts = torch.randint(0, 20000, (2, 256))
+# get a ton of <sound, text> pairs and train
+
 wavs = torch.randn(2, 1024)
+texts = torch.randint(0, 20000, (2, 256))
 
 loss = mulan(wavs, texts)
 loss.backward()
+
+# after much training, you can embed sounds and text into a joint embedding space
+# for conditioning the audio LM
+
+embeds = mulan.get_audio_latents(wavs)  # during training
+
+embeds = mulan.get_text_latents(texts)  # during inference
 ```
 
 ## Todo
