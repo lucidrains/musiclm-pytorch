@@ -68,6 +68,7 @@ embeds = mulan.get_text_latents(texts)  # during inference
 - [ ] add a version of mulan to <a href="https://github.com/mlfoundations/open_clip">open clip</a>
 - [ ] set all the proper spectrogram hyperparameters
 - [ ] email some contrastive learning experts and figure out why some papers are sharing the projection from embeddings to latent space
+- [ ] improvise a bit and give the audio transformer a position generating module before each attention layer
 
 ## Appreciation
 
