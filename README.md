@@ -14,9 +14,9 @@ They are basically using text-conditioned <a href="https://github.com/lucidrains
 
 ```bibtex
 @inproceedings{Agostinelli2023MusicLMGM,
-  title     = {MusicLM: Generating Music From Text},
-  author    = {Andrea Agostinelli and Timo I. Denk and Zal{\'a}n Borsos and Jesse Engel and Mauro Verzetti and Antoine Caillon and Qingqing Huang and Aren Jansen and Adam Roberts and Marco Tagliasacchi and Matthew Sharifi and Neil Zeghidour and C. Frank},
-  year      = {2023}
+    title     = {MusicLM: Generating Music From Text},
+    author    = {Andrea Agostinelli and Timo I. Denk and Zal{\'a}n Borsos and Jesse Engel and Mauro Verzetti and Antoine Caillon and Qingqing Huang and Aren Jansen and Adam Roberts and Marco Tagliasacchi and Matthew Sharifi and Neil Zeghidour and C. Frank},
+    year      = {2023}
 }
 ```
 
@@ -29,3 +29,5 @@ They are basically using text-conditioned <a href="https://github.com/lucidrains
     volume  = {abs/2208.12415}
 }
 ```
+
+*The only truth is music.* - Jack Kerouac
