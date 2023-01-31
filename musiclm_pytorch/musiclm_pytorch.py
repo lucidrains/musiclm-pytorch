@@ -227,6 +227,8 @@ class AudioSpectrogramTransformer(nn.Module):
             pad_mode = spec_pad_mode
         )
 
+        # SpecAugment - seems to be widely used in audio field https://arxiv.org/abs/1904.08779
+
         self.aug = torch.nn.Sequential(
             TimeStretch(spec_aug_stretch_factor, fixed_rate=True),
             FrequencyMasking(freq_mask_param = spec_aug_freq_mask),
