@@ -20,6 +20,7 @@ setup(
   ],
   install_requires=[
     'audiolm-pytorch',
+    'beartype',
     'einops>=0.4',
     'vector-quantize-pytorch>=0.10.15',
     'x-clip',
