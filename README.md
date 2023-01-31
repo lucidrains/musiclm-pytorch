@@ -57,6 +57,7 @@ loss.backward()
 - [ ] add a version of mulan to <a href="https://github.com/mlfoundations/open_clip">open clip</a>
 - [ ] set all the proper spectrogram hyperparameters
 - [ ] mulan seems to be using decoupled contrastive learning, offer that as an option
+- [ ] email some contrastive learning experts and figure out why some papers are sharing the projection from embeddings to latent space
 
 ## Appreciation
 

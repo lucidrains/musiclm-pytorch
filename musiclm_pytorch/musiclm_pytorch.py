@@ -388,6 +388,22 @@ class MuLaN(nn.Module):
         self.text_to_latents = nn.Linear(self.text.dim, dim_latent)
         self.audio_to_latents = nn.Linear(self.audio.dim, dim_latent)
 
+    def get_audio_latents(
+        self,
+        wavs
+    ):
+        audio_embeds = self.audio(wavs)
+        audio_latents = self.audio_to_latents(audio_embeds)
+        return l2norm(audio_latents)
+
+    def get_text_latents(
+        self,
+        texts,
+    ):
+        text_embeds = self.text(texts)
+        text_latents = self.text_to_latents(text_embeds)
+        return l2norm(text_latents)
+
     def forward(
         self,
         wavs,
