@@ -54,6 +54,9 @@ loss.backward()
 - [ ] wrap mulan with mulan wrapper and quantize the output, project to audiolm dimensions
 - [ ] modify audiolm to accept conditioning embeddings, optionally take care of different dimensions through a separate projection
 - [ ] audiolm and mulan goes into musiclm and generate, filter with mulan
+- [ ] add a version of mulan to <a href="https://github.com/mlfoundations/open_clip">open clip</a>
+- [ ] set all the proper spectrogram hyperparameters
+- [ ] mulan seems to be using decoupled contrastive learning, offer that as an option
 
 ## Appreciation
 
