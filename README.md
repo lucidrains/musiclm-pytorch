@@ -60,16 +60,36 @@ embeds = mulan.get_audio_latents(wavs)  # during training
 embeds = mulan.get_text_latents(texts)  # during inference
 ```
 
+To obtain the conditioning embeddings for the three transformers that are a part of `AudioLM`, you must use the `MuLaNEmbedQuantizer` as so
+
+```python
+from musiclm_pytorch import MuLaNEmbedQuantizer
+
+wavs = torch.randn(2, 1024)
+embeds = mulan.get_audio_latents(wavs)
+
+# setup the quantizer with the namespaced conditioning embeddings, unique per quantizer as well as namespace (per transformer)
+
+quantizer = MuLaNEmbedQuantizer(
+    mulan = mulan,
+    conditioning_dims = (1024, 1024, 1024), # say all three transformers have model dimensions of 1024
+    namespaces = ('semantic', 'coarse', 'fine')
+)
+
+# now say you want the conditioning embeddings for semantic transformer
+
+conds = quantizer(wavs = wavs, namespace = 'semantic') # (2, 8, 1024) - 8 is number of quantizers
+```
+
 ## Todo
 
 - [x] mulan seems to be using decoupled contrastive learning, offer that as an option
+- [x] wrap mulan with mulan wrapper and quantize the output, project to audiolm dimensions
 
-- [ ] wrap mulan with mulan wrapper and quantize the output, project to audiolm dimensions
 - [ ] modify audiolm to accept conditioning embeddings, optionally take care of different dimensions through a separate projection
 - [ ] audiolm and mulan goes into musiclm and generate, filter with mulan
 - [ ] add a version of mulan to <a href="https://github.com/mlfoundations/open_clip">open clip</a>
 - [ ] set all the proper spectrogram hyperparameters
-- [ ] email some contrastive learning experts and figure out why some papers are sharing the projection from embeddings to latent space
 - [ ] improvise a bit and give the audio transformer a position generating module before each attention layer
 
 ## Appreciation
