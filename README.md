@@ -65,19 +65,17 @@ To obtain the conditioning embeddings for the three transformers that are a part
 ```python
 from musiclm_pytorch import MuLaNEmbedQuantizer
 
-wavs = torch.randn(2, 1024)
-embeds = mulan.get_audio_latents(wavs)
-
 # setup the quantizer with the namespaced conditioning embeddings, unique per quantizer as well as namespace (per transformer)
 
 quantizer = MuLaNEmbedQuantizer(
-    mulan = mulan,
+    mulan = mulan,                          # pass in trained mulan from above
     conditioning_dims = (1024, 1024, 1024), # say all three transformers have model dimensions of 1024
     namespaces = ('semantic', 'coarse', 'fine')
 )
 
 # now say you want the conditioning embeddings for semantic transformer
 
+wavs = torch.randn(2, 1024)
 conds = quantizer(wavs = wavs, namespace = 'semantic') # (2, 8, 1024) - 8 is number of quantizers
 ```
 
