@@ -11,13 +11,16 @@ from vector_quantize_pytorch import ResidualVQ
 
 from einops import rearrange, repeat, reduce, pack, unpack
 
-from beartype.typing import List, Optional
+from beartype.typing import List, Optional, Tuple
 from beartype import beartype
 
 # functions
 
 def exists(val):
     return val is not None
+
+def default(val, d):
+    return val if exists(val) else d
 
 def round_down_nearest_multiple(n, divisor):
     return n // divisor * divisor
@@ -449,15 +452,26 @@ class MuLaNEmbedQuantizer(nn.Module):
     def __init__(
         self,
         mulan: MuLaN,
+        conditioning_dims: Tuple[int, ...],
         rq_num_quantizers = 8,
         rq_ema_decay = 0.9,
         codebook_size = 1024,
+        namespaces: Tuple[str, ...] = ('semantic', 'coarse', 'fine'),
+
     ):
         super().__init__()
         self.mulan = mulan
 
+        assert len(namespaces) > 0
+        self.namespaces = namespaces
+        self.conditioning_dims = conditioning_dims
+
+        assert len(conditioning_dims) == len(namespaces), 'number of conditioning dimensions must be equal to number of namespaces'
+
+        dim = mulan.dim_latent
+
         self.rq = ResidualVQ(
-            dim = mulan.dim_latent,
+            dim = dim,
             num_quantizers = rq_num_quantizers,
             codebook_size = codebook_size,
             decay = rq_ema_decay,
@@ -467,12 +481,33 @@ class MuLaNEmbedQuantizer(nn.Module):
             quantize_dropout = False  # no quantize dropout
         )
 
+        self.dim = dim
+        self.num_codebooks = rq_num_quantizers
+
+        self.cond_embeddings = nn.ParameterDict({})
+
+        for namespace, conditioning_dim in zip(namespaces, conditioning_dims):
+            cond_embeddings = nn.Parameter(torch.randn(rq_num_quantizers, codebook_size, conditioning_dim))
+            nn.init.normal_(cond_embeddings, std = 0.02)
+
+            self.cond_embeddings[namespace] = cond_embeddings
+
+        self.set_default_namespace(namespaces[0])
+
+    def set_default_namespace(self, namespace):
+        self._default_namespace = namespace
+
     def forward(
         self,
         wavs = None,
-        texts = None
+        texts = None,
+        namespace = None
     ):
-        assert exists(wavs) ^ exist(texts)
+        assert exists(wavs) ^ exists(texts)
+
+        namespace = default(namespace, self._default_namespace)
+        assert namespace in self.namespaces, f'namespace {namespace} not found'
+        cond_embeddings = self.cond_embeddings[namespace]
 
         with torch.no_grad():
             self.mulan.eval()
@@ -486,7 +521,13 @@ class MuLaNEmbedQuantizer(nn.Module):
 
         _, indices, _ = self.rq(latents)
 
-        return indices
+        batch, num_codebooks, dim = indices.shape[0], self.num_codebooks, cond_embeddings.shape[-1]
+
+        cond_embeddings = repeat(cond_embeddings, 'q c d -> b q c d', b = batch)
+        indices = repeat(indices, 'b q -> b q 1 d', q = num_codebooks, d = dim)
+
+        cond_embeddings = cond_embeddings.gather(2, indices)
+        return rearrange(cond_embeddings, 'b q 1 d -> b q d')
 
 @beartype
 class MusicLM(nn.Module):
