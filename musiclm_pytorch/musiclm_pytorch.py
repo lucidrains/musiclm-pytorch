@@ -5,6 +5,7 @@ from torch import nn, einsum
 from torchaudio.transforms import Spectrogram, TimeStretch, FrequencyMasking, TimeMasking
 
 from audiolm_pytorch import AudioLM
+from audiolm_pytorch.utils import AudioConditionerBase
 
 from x_clip.tokenizer import tokenizer
 from vector_quantize_pytorch import ResidualVQ
@@ -448,7 +449,7 @@ class MuLaN(nn.Module):
 # music lm
 
 @beartype
-class MuLaNEmbedQuantizer(nn.Module):
+class MuLaNEmbedQuantizer(AudioConditionerBase):
     def __init__(
         self,
         mulan: MuLaN,
