@@ -549,7 +549,7 @@ class MusicLM(nn.Module):
         self.eval()
 
         texts = tokenizer.tokenize(raw_texts)
-        cond_tokens = self.mulan_embed_quantizer(texts = texts)
 
-        wavs = self.audio_lm.generate(cond_tokens = cond_tokens, **audio_lm_kwargs)
-        return wavs
+        text_embeds = self.mulan_embed_quantizer(texts = texts)
+
+        return self.audio_lm(text_embeds = text_embeds, **audio_lm_kwargs)

@@ -79,6 +79,17 @@ wavs = torch.randn(2, 1024)
 conds = quantizer(wavs = wavs, namespace = 'semantic') # (2, 8, 1024) - 8 is number of quantizers
 ```
 
+After much training, you will pass your finetuned or trained-from-scratch `AudioLM` and `MuLaN` wrapped in `MuLaNEmbedQuantizer` to the `MusicLM`
+
+```python
+musiclm = MusicLM(
+    audio_lm = audio_lm,
+    mulan_embed_quantizer = mulan_embed_quantizer
+)
+
+music = musiclm(['the crystalline sounds of the piano in a ballroom']) # torch.Tensor
+```
+
 ## Todo
 
 - [x] mulan seems to be using decoupled contrastive learning, offer that as an option
