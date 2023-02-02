@@ -494,6 +494,9 @@ class MuLaNEmbedQuantizer(nn.Module):
 
         self.set_default_namespace(namespaces[0])
 
+    def parameters(self):
+        return self.cond_embeddings.parameters()
+
     def set_default_namespace(self, namespace):
         self._default_namespace = namespace
 
