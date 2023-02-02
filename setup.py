@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
   name = 'musiclm-pytorch',
   packages = find_packages(exclude=[]),
-  version = '0.0.7',
+  version = '0.0.8',
   license='MIT',
   description = 'MusicLM - AudioLM + Audio CLIP to text to music synthesis',
   author = 'Phil Wang',
@@ -19,7 +19,7 @@ setup(
     'contrastive learning'
   ],
   install_requires=[
-    'audiolm-pytorch>=0.9.2',
+    'audiolm-pytorch>=0.9.3',
     'beartype',
     'einops>=0.4',
     'vector-quantize-pytorch>=1.0.0',

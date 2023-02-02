@@ -95,7 +95,8 @@ wav2vec = HubertWithKmeans(
 semantic_transformer = SemanticTransformer(
     num_semantic_tokens = wav2vec.codebook_size,
     dim = 1024,
-    depth = 6
+    depth = 6,
+    audio_text_condition = True      # this must be set to True (same for CoarseTransformer and FineTransformers)
 ).cuda()
 
 trainer = SemanticTransformerTrainer(
