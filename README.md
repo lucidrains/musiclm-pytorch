@@ -79,7 +79,39 @@ wavs = torch.randn(2, 1024)
 conds = quantizer(wavs = wavs, namespace = 'semantic') # (2, 8, 1024) - 8 is number of quantizers
 ```
 
-After much training, you will pass your finetuned or trained-from-scratch `AudioLM` and `MuLaN` wrapped in `MuLaNEmbedQuantizer` to the `MusicLM`
+To train (or finetune) the three transformers that are a part of `AudioLM`, you simply follow the instructions over at `audiolm-pytorch` for training, but pass in the `MulanEmbedQuantizer` instance to the training classes under the keyword `audio_conditioner`
+
+ex. `SemanticTransformerTrainer`
+
+```python
+import torch
+from audiolm_pytorch import HubertWithKmeans, SemanticTransformer, SemanticTransformerTrainer
+
+wav2vec = HubertWithKmeans(
+    checkpoint_path = './hubert/hubert_base_ls960.pt',
+    kmeans_path = './hubert/hubert_base_ls960_L9_km500.bin'
+)
+
+semantic_transformer = SemanticTransformer(
+    num_semantic_tokens = wav2vec.codebook_size,
+    dim = 1024,
+    depth = 6
+).cuda()
+
+trainer = SemanticTransformerTrainer(
+    transformer = semantic_transformer,
+    wav2vec = wav2vec,
+    audio_conditioner = quantizer,   # pass in the MulanEmbedQuantizer instance above
+    folder ='/path/to/audio/files',
+    batch_size = 1,
+    data_max_length = 320 * 32,
+    num_train_steps = 1
+)
+
+trainer.train()
+```
+
+After much training on all three transformers (semantic, coarse, fine), you will pass your finetuned or trained-from-scratch `AudioLM` and `MuLaN` wrapped in `MuLaNEmbedQuantizer` to the `MusicLM`
 
 ```python
 musiclm = MusicLM(

@@ -541,6 +541,8 @@ class MusicLM(nn.Module):
         mulan_embed_quantizer: MuLaNEmbedQuantizer
     ):
         super().__init__()
+        assert not exists(audio_lm.audio_conditioner), 'mulan must not have been passed into AudioLM. it will be managed externally now, embedding the text into the joint embedding space for text-to-audio synthesis'
+
         self.mulan_embed_quantizer = mulan_embed_quantizer
         self.audio_lm = audio_lm
 
