@@ -126,12 +126,12 @@ music = musiclm(['the crystalline sounds of the piano in a ballroom']) # torch.T
 
 - [x] mulan seems to be using decoupled contrastive learning, offer that as an option
 - [x] wrap mulan with mulan wrapper and quantize the output, project to audiolm dimensions
+- [x] modify audiolm to accept conditioning embeddings, optionally take care of different dimensions through a separate projection
+- [x] audiolm and mulan goes into musiclm and generate, filter with mulan
 
-- [ ] modify audiolm to accept conditioning embeddings, optionally take care of different dimensions through a separate projection
-- [ ] audiolm and mulan goes into musiclm and generate, filter with mulan
+- [ ] improvise a bit and give the audio transformer a position generating module before each attention layer
 - [ ] add a version of mulan to <a href="https://github.com/mlfoundations/open_clip">open clip</a>
 - [ ] set all the proper spectrogram hyperparameters
-- [ ] improvise a bit and give the audio transformer a position generating module before each attention layer
 
 ## Appreciation
 
