@@ -11,6 +11,7 @@ from x_clip.tokenizer import tokenizer
 from vector_quantize_pytorch import ResidualVQ
 
 from einops import rearrange, repeat, reduce, pack, unpack
+from einops.layers.torch import Rearrange
 
 from beartype.typing import List, Optional, Tuple
 from beartype import beartype
@@ -25,6 +26,9 @@ def default(val, d):
 
 def round_down_nearest_multiple(n, divisor):
     return n // divisor * divisor
+
+def Sequential(*modules):
+    return nn.Sequential(*filter(exists, modules))
 
 # tensor functions
 
@@ -214,14 +218,21 @@ class AudioSpectrogramTransformer(nn.Module):
         spec_pad_mode = 'reflect',
         spec_aug_stretch_factor = 0.8,
         spec_aug_freq_mask = 80,
-        spec_aug_time_mask = 80
-
+        spec_aug_time_mask = 80,
+        dual_patchnorm = True
     ):
         super().__init__()
         self.dim = dim
 
         self.patch_size = pair(patch_size)
-        self.to_patch_tokens = nn.Conv2d(self.patch_size[0] * self.patch_size[1], dim, 1)
+        patch_input_dim = self.patch_size[0] * self.patch_size[1]
+
+        self.to_patch_tokens = Sequential(
+            Rearrange('b (h p1) (w p2) -> b h w (p1 p2)', p1 = self.patch_size[0], p2 = self.patch_size[1]),
+            nn.LayerNorm(patch_input_dim) if dual_patchnorm else None,
+            nn.Linear(patch_input_dim, dim),
+            nn.LayerNorm(dim) if dual_patchnorm else None
+        )
 
         self.spec = Spectrogram(
             n_fft = spec_n_fft,
@@ -273,12 +284,10 @@ class AudioSpectrogramTransformer(nn.Module):
 
         # to patches
 
-        x = rearrange(x, 'b (h p1) (w p2) -> b (p1 p2) h w', p1 = patch_height, p2 = patch_width)
         x = self.to_patch_tokens(x)
 
         # 2d sinusoidal positional embedding
 
-        x = rearrange(x, 'b c h w -> b h w c')
         x = x + posemb_sincos_2d(x)
 
         # attention, what else
