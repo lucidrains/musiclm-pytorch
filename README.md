@@ -170,4 +170,14 @@ music = musiclm(['the crystalline sounds of the piano in a ballroom']) # torch.T
 }
 ```
 
+```bibtex
+@article{Liu2022PatchDropoutEV,
+    title   = {PatchDropout: Economizing Vision Transformers Using Patch Dropout},
+    author  = {Yue Liu and Christos Matsoukas and Fredrik Strand and Hossein Azizpour and Kevin Smith},
+    journal = {ArXiv},
+    year    = {2022},
+    volume  = {abs/2208.07220}
+}
+```
+
 *The only truth is music.* - Jack Kerouac
