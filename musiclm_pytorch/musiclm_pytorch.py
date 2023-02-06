@@ -366,6 +366,10 @@ class TextTransformer(nn.Module):
         self.pad_id = pad_id
         self.norm = LayerNorm(dim)
 
+    @property
+    def device(self):
+        return next(self.parameters()).device
+
     def forward(
         self,
         x = None,
@@ -375,7 +379,7 @@ class TextTransformer(nn.Module):
         assert exists(x) ^ exists(raw_texts)
 
         if exists(raw_texts):
-            x = tokenizer.tokenize(raw_texts)
+            x = tokenizer.tokenize(raw_texts).to(self.device)
 
         if not exists(mask):
             mask = x != self.pad_id
@@ -443,7 +447,7 @@ class MuLaN(nn.Module):
         texts = None,
         raw_texts: Optional[List[str]] = None
     ):
-        text_embeds = self.text(texts)
+        text_embeds = self.text(texts, raw_texts = raw_texts)
         text_latents = self.text_to_latents(text_embeds)
         return l2norm(text_latents)
 
@@ -473,7 +477,7 @@ class MuLaN(nn.Module):
         numerator = cosine_sim_exp.diag()
 
         if self.decoupled_contrastive_learning:
-            eye = torch.eye(batch, device = device)
+            eye = torch.eye(batch, device = device, dtype = torch.bool)
             cosine_sim_exp = cosine_sim_exp.masked_fill(eye, 0.)
 
         denominator = reduce(cosine_sim_exp, 'i j -> i', 'sum')
@@ -581,6 +585,10 @@ class MusicLM(nn.Module):
         self.mulan_embed_quantizer = mulan_embed_quantizer
         self.audio_lm = audio_lm
 
+    @property
+    def device(self):
+        return next(self.parameters()).device
+
     @torch.no_grad()
     def forward(
         self,
@@ -589,7 +597,7 @@ class MusicLM(nn.Module):
     ):
         self.eval()
 
-        texts = tokenizer.tokenize(raw_texts)
+        texts = tokenizer.tokenize(raw_texts).to(self.device)
 
         text_embeds = self.mulan_embed_quantizer(texts = texts)
 

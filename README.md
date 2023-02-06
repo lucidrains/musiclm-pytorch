@@ -1,12 +1,18 @@
 <img src="./musiclm.png" width="450px"></img>
 
-## MusicLM - Pytorch (wip)
+## MusicLM - Pytorch
 
 Implementation of <a href="https://google-research.github.io/seanet/musiclm/examples/">MusicLM</a>, Google's new SOTA model for music generation using attention networks, in Pytorch.
 
 They are basically using text-conditioned <a href="https://github.com/lucidrains/audiolm-pytorch">AudioLM</a>, but surprisingly with the embeddings from a text-audio contrastive learned model named <a href="https://arxiv.org/abs/2208.12415">MuLan</a>. MuLan is what will be built out in this repository, with AudioLM modified from the other repository to support the music generation needs here.
 
 Please join <a href="https://discord.gg/xBPBXfcFHd"><img alt="Join us on Discord" src="https://img.shields.io/discord/823813159592001537?color=5865F2&logo=discord&logoColor=white"></a> if you are interested in helping out with the replication with the <a href="https://laion.ai/">LAION</a> community
+
+## Appreciation
+
+- <a href="https://stability.ai/">Stability.ai</a> for the generous sponsorship to work and open source cutting edge artificial intelligence research
+
+- <a href="https://huggingface.co/">🤗 Huggingface</a> for their <a href="https://huggingface.co/docs/accelerate/index">accelerate</a> training library
 
 ## Usage
 
@@ -133,10 +139,6 @@ music = musiclm(['the crystalline sounds of the piano in a ballroom']) # torch.T
 - [ ] improvise a bit and give the audio transformer a position generating module before each attention layer
 - [ ] add a version of mulan to <a href="https://github.com/mlfoundations/open_clip">open clip</a>
 - [ ] set all the proper spectrogram hyperparameters
-
-## Appreciation
-
-- <a href="https://stability.ai/">Stability.ai</a> for the generous sponsorship to work and open source cutting edge artificial intelligence research
 
 ## Citations
 
