@@ -136,7 +136,7 @@ music = musiclm(['the crystalline sounds of the piano in a ballroom']) # torch.T
 - [x] modify audiolm to accept conditioning embeddings, optionally take care of different dimensions through a separate projection
 - [x] audiolm and mulan goes into musiclm and generate, filter with mulan
 
-- [ ] improvise a bit and give the audio transformer a position generating module before each attention layer
+- [ ] give dynamic positional bias to self attention in AST
 - [ ] add a version of mulan to <a href="https://github.com/mlfoundations/open_clip">open clip</a>
 - [ ] set all the proper spectrogram hyperparameters
 
