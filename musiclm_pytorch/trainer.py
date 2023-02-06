@@ -225,9 +225,9 @@ class MuLaNTrainer(nn.Module):
 
         # dataloader
 
-        self.dl = get_dataloader(self.ds, batch_size = batch_size, shuffle = True)
+        self.dl = get_dataloader(self.ds, batch_size = batch_size, shuffle = True, pad_to_longest = False)
 
-        self.valid_dl = get_dataloader(self.valid_ds, batch_size = batch_size, shuffle = True)
+        self.valid_dl = get_dataloader(self.valid_ds, batch_size = batch_size, shuffle = True, pad_to_longest = False)
 
         # prepare with accelerator
 
