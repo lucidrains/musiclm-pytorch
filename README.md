@@ -8,6 +8,8 @@ They are basically using text-conditioned <a href="https://github.com/lucidrains
 
 Please join <a href="https://discord.gg/xBPBXfcFHd"><img alt="Join us on Discord" src="https://img.shields.io/discord/823813159592001537?color=5865F2&logo=discord&logoColor=white"></a> if you are interested in helping out with the replication with the <a href="https://laion.ai/">LAION</a> community
 
+<a href="https://www.youtube.com/watch?v=jTrYIGxOuKQ">What's AI by Louis Bouchard</a>
+
 ## Appreciation
 
 - <a href="https://stability.ai/">Stability.ai</a> for the generous sponsorship to work and open source cutting edge artificial intelligence research
