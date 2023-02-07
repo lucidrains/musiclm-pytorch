@@ -1,3 +1,5 @@
+from functools import wraps
+
 import torch
 import torch.nn.functional as F
 from torch import nn, einsum
@@ -29,6 +31,21 @@ def round_down_nearest_multiple(n, divisor):
 
 def Sequential(*modules):
     return nn.Sequential(*filter(exists, modules))
+
+# decorators
+
+def once(fn):
+    called = False
+    @wraps(fn)
+    def inner(x):
+        nonlocal called
+        if called:
+            return
+        called = True
+        return fn(x)
+    return inner
+
+print_once = once(print)
 
 # tensor functions
 
@@ -240,8 +257,7 @@ class AudioSpectrogramTransformer(nn.Module):
         spec_aug_stretch_factor = 0.8,
         spec_aug_freq_mask = 80,
         spec_aug_time_mask = 80,
-        dual_patchnorm = True,
-        patch_dropout_prob = 0.5
+        patch_dropout_prob = 0.25
     ):
         super().__init__()
         self.dim = dim
@@ -251,9 +267,9 @@ class AudioSpectrogramTransformer(nn.Module):
 
         self.to_patch_tokens = Sequential(
             Rearrange('b (h p1) (w p2) -> b h w (p1 p2)', p1 = self.patch_size[0], p2 = self.patch_size[1]),
-            nn.LayerNorm(patch_input_dim) if dual_patchnorm else None,
+            nn.LayerNorm(patch_input_dim),
             nn.Linear(patch_input_dim, dim),
-            nn.LayerNorm(dim) if dual_patchnorm else None
+            nn.LayerNorm(dim)
         )
 
         self.spec = Spectrogram(
@@ -269,7 +285,7 @@ class AudioSpectrogramTransformer(nn.Module):
         # SpecAugment - seems to be widely used in audio field https://arxiv.org/abs/1904.08779
 
         self.aug = torch.nn.Sequential(
-            TimeStretch(spec_aug_stretch_factor, fixed_rate=True),
+            TimeStretch(spec_aug_stretch_factor, fixed_rate = True),
             FrequencyMasking(freq_mask_param = spec_aug_freq_mask),
             TimeMasking(time_mask_param = spec_aug_time_mask),
         )
@@ -302,7 +318,7 @@ class AudioSpectrogramTransformer(nn.Module):
         rounded_height, rounded_width = map(lambda args: round_down_nearest_multiple(*args), ((height, patch_height), (width, patch_width)))
 
         if (height, width) != (rounded_height, rounded_width): # just keep printing to be annoying until it is fixed
-            print(f'spectrogram yielded shape of {(height, width)}, but had to be cropped to {(rounded_height, rounded_width)} to be patchified for transformer')
+            print_once(f'spectrogram yielded shape of {(height, width)}, but had to be cropped to {(rounded_height, rounded_width)} to be patchified for transformer')
 
         x = x[..., :rounded_height, :rounded_width]
 

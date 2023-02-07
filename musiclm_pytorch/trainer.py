@@ -14,7 +14,7 @@ from beartype.typing import Union, List, Optional, Tuple, Callable
 
 import torch
 from torch import nn
-from torch.optim import AdamW, Adam
+from torch.optim import Adam
 from torch.utils.data import Dataset, DataLoader, random_split
 from torch.nn.utils.rnn import pad_sequence
 
@@ -101,32 +101,6 @@ def separate_weight_decayable_params(params):
         param_list.append(param)
     return wd_params, no_wd_params
 
-def get_optimizer(
-    params,
-    lr = 1e-4,
-    wd = 1e-2,
-    betas = (0.9, 0.99),
-    eps = 1e-8,
-    filter_by_requires_grad = False,
-    group_wd_params = True,
-    **kwargs
-):
-    if filter_by_requires_grad:
-        params = list(filter(lambda t: t.requires_grad, params))
-
-    if wd == 0:
-        return Adam(params, lr = lr, betas = betas, eps = eps)
-
-    if group_wd_params:
-        wd_params, no_wd_params = separate_weight_decayable_params(params)
-
-        params = [
-            {'params': wd_params},
-            {'params': no_wd_params, 'weight_decay': 0},
-        ]
-
-    return AdamW(params, lr = lr, weight_decay = wd, betas = betas, eps = eps)
-
 # dataloader functions
 
 def collate_one_or_multiple_tensors(fn):
@@ -180,7 +154,7 @@ class MuLaNTrainer(nn.Module):
         folder = None,
         lr = 3e-4,
         grad_accum_every = 1,
-        wd = 0.,
+        betas = (0.9, 0.99),
         max_grad_norm = 0.5,
         valid_frac = 0.05,
         random_split_seed = 42,
@@ -201,11 +175,13 @@ class MuLaNTrainer(nn.Module):
 
         # optimizers
 
-        self.optim = get_optimizer(mulan.parameters(), lr = lr, wd = wd)
+        self.optim = Adam(mulan.parameters(), lr = lr, betas = betas)
 
         # max grad norm
 
         self.max_grad_norm = max_grad_norm
+
+        self.data_max_length = data_max_length
 
         # create dataset
 
@@ -311,7 +287,12 @@ class MuLaNTrainer(nn.Module):
             self.ds_fields = determine_types(data, DATASET_FIELD_TYPE_CONFIG)
             assert not has_duplicates(self.ds_fields), 'dataset fields must not have duplicate field names'
 
-        return dict(zip(self.ds_fields, data))
+        data_kwargs =  dict(zip(self.ds_fields, data))
+
+        wavs = data_kwargs['wavs']
+        data_kwargs.update(wavs = wavs[..., :self.data_max_length])
+
+        return data_kwargs
 
     def train_step(self):
         device = self.device
@@ -328,6 +309,7 @@ class MuLaNTrainer(nn.Module):
 
         for _ in range(self.grad_accum_every):
             data_kwargs = self.data_tuple_to_kwargs(next(self.dl_iter))
+
             loss = self.mulan(**data_kwargs)
 
             self.accelerator.backward(loss / self.grad_accum_every)
