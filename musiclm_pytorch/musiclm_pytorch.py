@@ -367,6 +367,8 @@ class TextTransformer(nn.Module):
         self.token_emb = nn.Embedding(num_tokens, dim)
         self.pos_emb = nn.Embedding(max_seq_len, dim)
 
+        self.max_seq_len = max_seq_len
+
         self.cls_token = nn.Parameter(torch.randn(dim))
 
         self.transformer = Transformer(
@@ -405,6 +407,9 @@ class TextTransformer(nn.Module):
         # token embedding + positional embedding
 
         x = self.token_emb(x)
+
+        assert n <= self.max_seq_len, f'text sequence length {n} must be less than {self.max_seq_len}'
+
         x = x + self.pos_emb(torch.arange(n, device = device))
 
         # cls tokens, as in bert
