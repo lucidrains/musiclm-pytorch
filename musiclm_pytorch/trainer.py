@@ -163,6 +163,8 @@ class MuLaNTrainer(nn.Module):
         accelerate_kwargs: dict = dict()
     ):
         super().__init__()
+        assert batch_size > 1, 'batch size must be greater than 1 for contrastive learning (but ideally as large as possible)'
+
         self.accelerator = Accelerator(**accelerate_kwargs)
 
         self.mulan = mulan
