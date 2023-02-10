@@ -123,6 +123,11 @@ trainer.train()
 After much training on all three transformers (semantic, coarse, fine), you will pass your finetuned or trained-from-scratch `AudioLM` and `MuLaN` wrapped in `MuLaNEmbedQuantizer` to the `MusicLM`
 
 ```python
+# you need the trained AudioLM (audio_lm) from above
+# with the MulanEmbedQuantizer (mulan_embed_quantizer)
+
+from musiclm_pytorch import MusicLM
+
 musiclm = MusicLM(
     audio_lm = audio_lm,
     mulan_embed_quantizer = mulan_embed_quantizer
