@@ -160,7 +160,8 @@ class MuLaNTrainer(nn.Module):
         random_split_seed = 42,
         save_model_every = 1000,
         results_folder = './results',
-        accelerate_kwargs: dict = dict()
+        accelerate_kwargs: dict = dict(),
+        force_clear_prev_results = None  # set to True | False to skip the prompt
     ):
         super().__init__()
         assert batch_size > 1, 'batch size must be greater than 1 for contrastive learning (but ideally as large as possible)'
@@ -240,7 +241,7 @@ class MuLaNTrainer(nn.Module):
 
         self.results_folder = Path(results_folder)
 
-        if len([*self.results_folder.glob('**/*')]) > 0 and yes_or_no('do you want to clear previous experiment checkpoints and results?'):
+        if force_clear_prev_results is True or (not exists(force_clear_prev_results) and len([*self.results_folder.glob('**/*')]) > 0 and yes_or_no('do you want to clear previous experiment checkpoints and results?')):
             rmtree(str(self.results_folder))
 
         self.results_folder.mkdir(parents = True, exist_ok = True)
