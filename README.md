@@ -190,3 +190,5 @@ music = musiclm(['the crystalline sounds of the piano in a ballroom']) # torch.T
 ```
 
 *The only truth is music.* - Jack Kerouac
+
+*Music is the universal language of mankind.* - Henry Wadsworth Longfellow
