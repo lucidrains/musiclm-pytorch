@@ -543,7 +543,7 @@ class MuLaN(nn.Module):
 
         denominator = reduce(cosine_sim_exp, 'i j -> i', 'sum')
 
-        contrastive_loss = -log(numerator / denominator)
+        contrastive_loss = -log(numerator) + log(denominator)
         return contrastive_loss.mean()
 
 # music lm
