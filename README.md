@@ -142,8 +142,8 @@ music = musiclm(['the crystalline sounds of the piano in a ballroom']) # torch.T
 - [x] wrap mulan with mulan wrapper and quantize the output, project to audiolm dimensions
 - [x] modify audiolm to accept conditioning embeddings, optionally take care of different dimensions through a separate projection
 - [x] audiolm and mulan goes into musiclm and generate, filter with mulan
+- [x] give dynamic positional bias to self attention in AST
 
-- [ ] give dynamic positional bias to self attention in AST
 - [ ] add a version of mulan to <a href="https://github.com/mlfoundations/open_clip">open clip</a>
 - [ ] set all the proper spectrogram hyperparameters
 
@@ -186,6 +186,17 @@ music = musiclm(['the crystalline sounds of the piano in a ballroom']) # torch.T
     journal = {ArXiv},
     year    = {2022},
     volume  = {abs/2208.07220}
+}
+```
+
+```bibtex
+@misc{liu2021swin,
+    title   = {Swin Transformer V2: Scaling Up Capacity and Resolution},
+    author  = {Ze Liu and Han Hu and Yutong Lin and Zhuliang Yao and Zhenda Xie and Yixuan Wei and Jia Ning and Yue Cao and Zheng Zhang and Li Dong and Furu Wei and Baining Guo},
+    year    = {2021},
+    eprint  = {2111.09883},
+    archivePrefix = {arXiv},
+    primaryClass = {cs.CV}
 }
 ```
 
