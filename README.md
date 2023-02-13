@@ -200,6 +200,15 @@ music = musiclm(['the crystalline sounds of the piano in a ballroom']) # torch.T
 }
 ```
 
+```bibtex
+@misc{gilmer2023intriguing
+    title  = {Intriguing Properties of Transformer Training Instabilities},
+    author = {Justin Gilmer, Andrea Schioppa, and Jeremy Cohen},
+    year   = {2023},
+    status = {to be published - one attention stabilization technique is circulating within Google Brain, being used by multiple teams}
+}
+```
+
 *The only truth is music.* - Jack Kerouac
 
 *Music is the universal language of mankind.* - Henry Wadsworth Longfellow

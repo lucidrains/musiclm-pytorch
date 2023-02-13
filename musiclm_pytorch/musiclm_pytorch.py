@@ -113,11 +113,12 @@ class Attention(nn.Module):
         causal = False,
         dim_head = 64,
         heads = 8,
-        dropout = 0.
+        dropout = 0.,
+        scale = 8
     ):
         super().__init__()
         self.heads = heads
-        self.scale = dim_head ** -0.5
+        self.scale = scale
         self.causal = causal
         inner_dim = dim_head * heads
 
@@ -127,6 +128,9 @@ class Attention(nn.Module):
 
         self.to_q = nn.Linear(dim, inner_dim, bias = False)
         self.to_kv = nn.Linear(dim, inner_dim * 2, bias = False)
+
+        self.q_scale = nn.Parameter(torch.ones(dim_head))
+        self.k_scale = nn.Parameter(torch.ones(dim_head))
 
         self.to_out = nn.Sequential(
             nn.Linear(inner_dim, dim, bias = False),
@@ -153,11 +157,15 @@ class Attention(nn.Module):
 
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h = self.heads), (q, k, v))
 
-        q = q * self.scale
+        # qk rmsnorm, technique circulating within brain used to stabilize a 22B parameter vision model training
+
+        q, k = map(l2norm, (q, k))
+        q = q * self.q_scale
+        k = k * self.k_scale
 
         # similarities
 
-        sim = einsum('b h i d, b h j d -> b h i j', q, k)
+        sim = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
 
         if exists(rel_pos_bias):
             sim = sim + rel_pos_bias
