@@ -345,7 +345,7 @@ class AudioSpectrogramTransformer(nn.Module):
 
         # get number of patches along height and width
 
-        num_patch_height, num_patch_width = x.shape[-2:]
+        _, num_patch_height, num_patch_width, _ = x.shape
 
         # get 2d relative positions
 
