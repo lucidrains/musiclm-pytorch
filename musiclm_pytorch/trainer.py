@@ -333,9 +333,8 @@ class MuLaNTrainer(nn.Module):
         # save model every so often
 
         if self.is_main and not (steps % self.save_model_every):
-            state_dict = self.mulan.state_dict()
             model_path = str(self.results_folder / f'mulan.{steps}.pt')
-            torch.save(state_dict, model_path)
+            self.save(model_path)
 
             self.print(f'{steps}: saving model to {str(self.results_folder)}')
 
