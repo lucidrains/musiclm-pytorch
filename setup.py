@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
   name = 'musiclm-pytorch',
   packages = find_packages(exclude=[]),
-  version = '0.0.25',
+  version = '0.0.26',
   license='MIT',
   description = 'MusicLM - AudioLM + Audio CLIP to text to music synthesis',
   author = 'Phil Wang',
@@ -23,6 +23,7 @@ setup(
     'audiolm-pytorch>=0.10.4',
     'beartype',
     'einops>=0.6',
+    'lion-pytorch',
     'vector-quantize-pytorch>=1.0.0',
     'x-clip',
     'torch>=1.12',
