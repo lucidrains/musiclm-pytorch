@@ -2,17 +2,27 @@ import shutil
 from collections import defaultdict
 from functools import wraps
 from pathlib import Path
-from typing import Optional, Tuple, Callable, Union
+from typing import Optional, Tuple, Callable, Union, List
 
 import torch
 from beartype.door import is_bearable
+from beartype.vale import Is
 from lightning.fabric import Fabric
 from torch.nn.utils.rnn import pad_sequence
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset, random_split
+from typing_extensions import Annotated
 
 from musiclm_pytorch import MuLaN
 from itertools import cycle
+
+_DATASET_FIELD_TYPE_CONFIG = dict(
+    wavs=Annotated[
+        torch.Tensor, Is[lambda t: t.dtype == torch.float and t.ndim in {2, 3}]
+    ],
+    raw_texts=List[str],
+    texts=Annotated[torch.Tensor, Is[lambda t: t.dtype == torch.long and t.ndim == 2]],
+)
 
 
 class FabricTrainer:
@@ -76,11 +86,25 @@ class FabricTrainer:
                 "This may not reflect real world performance on unseen data!"
             )
 
-        self.train_dl = DataLoader(self.train_ds, batch_size=batch_size, collate_fn=_curtail_to_shortest_collate, shuffle=True, drop_last=True)
-        self.valid_dl = DataLoader(self.valid_ds, batch_size=batch_size, collate_fn=_curtail_to_shortest_collate, shuffle=True, drop_last=True)
+        self.train_dl = DataLoader(
+            self.train_ds,
+            batch_size=batch_size,
+            collate_fn=_curtail_to_shortest_collate,
+            shuffle=True,
+            drop_last=True,
+        )
+        self.valid_dl = DataLoader(
+            self.valid_ds,
+            batch_size=batch_size,
+            collate_fn=_curtail_to_shortest_collate,
+            shuffle=True,
+            drop_last=True,
+        )
 
         self.mulan, self.optim = self.fabric.setup(self.mulan, self.optim)
-        self.train_dl, self.valid_dl = self.fabric.setup_dataloaders(self.train_dl, self.valid_dl)
+        self.train_dl, self.valid_dl = self.fabric.setup_dataloaders(
+            self.train_dl, self.valid_dl
+        )
 
         self.train_iter = cycle(self.train_dl)
         self.valid_iter = cycle(self.valid_dl)
@@ -88,60 +112,72 @@ class FabricTrainer:
 
         self.results_folder = Path(results_folder)
 
-        if len(list(self.results_folder.rglob('*'))) and remove_previous_results:
+        if len(list(self.results_folder.rglob("*"))) and remove_previous_results:
             shutil.rmtree((str(self.results_folder)))
 
         self.results_folder.mkdir(parents=True, exist_ok=True)
 
     @property
     def state(self):
-        return {'model': self.mulan, 'optimizer': self.optim, 'current_step': self.current_step}
+        return {
+            "model": self.mulan,
+            "optimizer": self.optim,
+            "current_step": self.current_step,
+        }
 
     def save(self):
-        self.fabric.save(self.results_folder / f'mulan-step-{self.current_step:05d}.ckpt', self.state)
+        self.fabric.save(
+            self.results_folder / f"mulan-step-{self.current_step:05d}.ckpt", self.state
+        )
 
-    def load(self, path: Optional[Union[str, Path]] = 'latest'):
-
-        if path == 'latest':
-            avail_files = list(self.results_folder.glob('*.ckpt'))
+    def load(self, path: Optional[Union[str, Path]] = "latest"):
+        if path == "latest":
+            avail_files = list(self.results_folder.glob("*.ckpt"))
             if not avail_files:
-                raise RuntimeError(f'There are no files to load from in {str(self.results_folder)}. Please specify the correct path.')
+                raise RuntimeError(
+                    f"There are no files to load from in {str(self.results_folder)}. Please specify the correct path."
+                )
 
-            path = sorted(avail_files, key=lambda x: int(str(x).rsplit('-', 1)[-1].rsplit('.', 1)[0]))[-1]
+            path = sorted(
+                avail_files,
+                key=lambda x: int(str(x).rsplit("-", 1)[-1].rsplit(".", 1)[0]),
+            )[-1]
 
         path = Path(path)
         assert path.is_file()
 
         remaining_items = self.fabric.load(path, self.state)
 
-        self.current_step = remaining_items.pop('current_step')
+        self.current_step = remaining_items.pop("current_step")
 
     def train(self, log_fn: Optional[Callable] = None):
         while self.current_step < self.num_training_steps:
-            logs = defaultdict(lambda: 0.)
+            logs = defaultdict(lambda: 0.0)
 
             self.mulan.train()
 
             for _ in range(self.grad_accum_every):
-                data_kwargs =  _data_tuple_to_kwargs(next(self.train_iter), self.data_max_length)
+                data_kwargs = _data_tuple_to_kwargs(
+                    next(self.train_iter), self.data_max_length
+                )
 
                 loss = self.mulan(**data_kwargs)
                 averaged_loss = loss / self.grad_accum_every
                 self.fabric.backward(averaged_loss)
 
-                logs['loss'] += averaged_loss.item()
+                logs["loss"] += averaged_loss.item()
 
             if self.max_grad_norm:
-                scaler = getattr(self.fabric.precision, 'scaler', None)
+                scaler = getattr(self.fabric.precision, "scaler", None)
                 if scaler is not None:
-                    scaler.unscale_(optimizer)
+                    scaler.unscale_(self.optim)
                 torch.nn.clip_grad_norm_(self.mulan.parameters(), self.max_grad_norm)
 
             self.optim.step()
             self.optim.zero_grad()
 
             self.fabric.print(f"{steps}: loss: {logs['loss']}")
-            self.fabric.log('train_loss', logs['loss'])
+            self.fabric.log("train_loss", logs["loss"])
             if log_fn is not None:
                 log_fn(logs)
 
@@ -180,11 +216,12 @@ def _curtail_to_shortest_collate(data):
 def _pad_to_longest(data):
     return pad_sequence(data, batch_first=True)
 
+
 def _data_tuple_to_kwargs(data, data_max_length):
-    ds_fields = _determine_types(data, DATASET_FIELD_TYPE_CONFIG)
+    ds_fields = _determine_types(data, _DATASET_FIELD_TYPE_CONFIG)
     data_kwargs = dict(zip(ds_fields, data))
 
-    wavs = data_kwargs['wavs']
+    wavs = data_kwargs["wavs"]
     data_kwargs.update(wavs=wavs[..., :data_max_length])
     return data_kwargs
 
@@ -197,6 +234,6 @@ def _determine_types(data, config):
                 output.append(name)
                 break
         else:
-            raise TypeError(f'unable to determine type of {data}')
+            raise TypeError(f"unable to determine type of {data}")
 
     return tuple(output)
