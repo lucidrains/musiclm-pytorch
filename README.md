@@ -143,9 +143,10 @@ music = musiclm('the crystalline sounds of the piano in a ballroom', num_samples
 - [x] modify audiolm to accept conditioning embeddings, optionally take care of different dimensions through a separate projection
 - [x] audiolm and mulan goes into musiclm and generate, filter with mulan
 - [x] give dynamic positional bias to self attention in AST
+- [x] implement MusicLM generating multiple samples and selecting top match with MuLaN
 
+- [ ] support variable lengthed audio with masking in audio transformer
 - [ ] add a version of mulan to <a href="https://github.com/mlfoundations/open_clip">open clip</a>
-- [ ] support variable lengthed audio with masking in audio transformer, then implement MusicLM generating multiple samples and selecting top match with MuLaN
 - [ ] set all the proper spectrogram hyperparameters
 
 ## Citations
