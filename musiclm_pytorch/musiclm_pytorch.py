@@ -23,6 +23,9 @@ from beartype import beartype
 def exists(val):
     return val is not None
 
+def first(it):
+    return it[0]
+
 def default(val, d):
     return val if exists(val) else d
 
@@ -243,6 +246,8 @@ class AudioSpectrogramTransformer(nn.Module):
         attn_dropout = 0.,
         ff_mult = 4,
         ff_dropout = 0.,
+        accept_spec = False,
+        accept_spec_time_first = True,
         spec_n_fft = 128,
         spec_power = 2,
         spec_win_length = 24,
@@ -267,6 +272,9 @@ class AudioSpectrogramTransformer(nn.Module):
             nn.Linear(patch_input_dim, dim),
             nn.LayerNorm(dim)
         )
+
+        self.accept_spec = accept_spec
+        self.accept_spec_time_first = accept_spec_time_first
 
         self.spec = Spectrogram(
             n_fft = spec_n_fft,
@@ -321,8 +329,13 @@ class AudioSpectrogramTransformer(nn.Module):
         force_no_patch_dropout = False
     ):
         batch, device = x.shape[0], x.device
+        assert (self.accept_spec and x.ndim == 3) or (not self.accept_spec and x.ndim == 2)
 
-        x = self.spec(x)
+        if self.accept_spec and self.accept_spec_time_first:
+            x = rearrange(x, 'b t f -> b f t')
+
+        if not self.accept_spec:
+            x = self.spec(x)
 
         if self.training:
             x = self.aug(x)
@@ -525,18 +538,26 @@ class MuLaN(nn.Module):
         wavs,
         texts = None,
         raw_texts: Optional[List[str]] = None,
-        return_similarities = False
+        return_latents = False,
+        return_similarities = False,
+        return_pairwise_similarities = False
     ):
         batch, device = wavs.shape[0], wavs.device
 
         audio_latents = self.get_audio_latents(wavs)
         text_latents = self.get_text_latents(texts, raw_texts = raw_texts)
 
+        if return_latents:
+            return audio_latents, text_latents
+
+        if return_similarities:
+            return einsum('i d, i d -> i', audio_latents, text_latents)
+
         cosine_sim = einsum('i d, j d -> i j', audio_latents, text_latents)
 
         assert cosine_sim.shape[0] == cosine_sim.shape[1], 'batch sizes for audio and text are not equal'
 
-        if return_similarities:
+        if return_pairwise_similarities:
             return cosine_sim
 
         cosine_sim = cosine_sim * self.temperature.exp()
@@ -661,13 +682,34 @@ class MusicLM(nn.Module):
     @torch.no_grad()
     def forward(
         self,
-        raw_texts: List[str],
+        text: str,
+        num_samples = 1,
         **audio_lm_kwargs
     ):
         self.eval()
 
-        texts = tokenizer.tokenize(raw_texts).to(self.device)
+        texts = tokenizer.tokenize([text]).to(self.device)
 
         text_embeds = self.mulan_embed_quantizer(texts = texts)
 
-        return self.audio_lm(text_embeds = text_embeds, **audio_lm_kwargs)
+        # unable to deal with variable lengthed audio for now
+
+        samples = []
+
+        for _ in range(num_samples):
+            music = self.audio_lm(text_embeds = text_embeds, **audio_lm_kwargs)
+            samples.append(music)
+
+        # if one sample, just return it
+
+        if num_samples == 1:
+            return first(samples)
+
+        mulan = self.mulan_embed_quantizer.mulan
+
+        # get the one with the highest similarity score, of all the samples
+
+        sims = torch.cat([mulan(texts = texts, wavs = music, return_similarities = True) for music in samples], dim = 0)
+        top_matching_index = sims.topk(1, dim = 0).indices.item()
+
+        return samples[top_matching_index]

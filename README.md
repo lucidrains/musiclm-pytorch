@@ -133,7 +133,7 @@ musiclm = MusicLM(
     mulan_embed_quantizer = mulan_embed_quantizer
 )
 
-music = musiclm(['the crystalline sounds of the piano in a ballroom']) # torch.Tensor
+music = musiclm('the crystalline sounds of the piano in a ballroom', num_samples = 4) # sample 4 and pick the top match with mulan
 ```
 
 ## Todo
