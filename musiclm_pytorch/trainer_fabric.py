@@ -14,7 +14,6 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from typing_extensions import Annotated
 
 from musiclm_pytorch import MuLaN
-from itertools import cycle
 
 _DATASET_FIELD_TYPE_CONFIG = dict(
     wavs=Annotated[
@@ -240,3 +239,8 @@ def _determine_types(data, config):
             raise TypeError(f"unable to determine type of {data}")
 
     return tuple(output)
+
+def cycle(dl):
+    while True:
+        for data in dl:
+            yield data
