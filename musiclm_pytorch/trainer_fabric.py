@@ -49,6 +49,7 @@ class FabricTrainer:
                 "batch_size must be greater than 1 for constrastive learning (but ideally as large as possible)"
             )
         self.fabric = Fabric(**fabric_kwargs)
+        self.fabric.launch()
 
         self.mulan = mulan
         self.current_step = 0
@@ -151,7 +152,6 @@ class FabricTrainer:
         self.current_step = remaining_items.pop("current_step")
 
     def train(self, log_fn: Optional[Callable] = None):
-        self.fabric.launch()
         while self.current_step < self.num_training_steps:
             logs = defaultdict(lambda: 0.0)
 
