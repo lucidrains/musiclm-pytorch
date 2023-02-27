@@ -8,6 +8,7 @@ from musiclm_pytorch.trainer_fabric import FabricTrainer
 import torch
 
 torch.manual_seed(42)
+from lightning.fabric.utilities.rank_zero import rank_zero_only
 
 
 class SimpleLogger:
@@ -16,6 +17,7 @@ class SimpleLogger:
 
         wandb.init(project="MusicLMDummyData", name="Fabric")
 
+    @rank_zero_only
     def __call__(self, logs: dict):
         wandb.log(logs)
 
