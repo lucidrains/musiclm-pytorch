@@ -36,7 +36,7 @@ mulan = MuLaN(audio_transformer=audio_transformer, text_transformer=text_transfo
 
 # get a ton of <sound, text> pairs and train
 dataset = DummyDataset(
-    num_samples=5000,
+    num_samples=500000,
     sample_length_audio=1024,
     sample_length_text=256,
     num_classes=2000,
@@ -46,7 +46,7 @@ dataset = DummyDataset(
 trainer = MuLaNTrainer(
     mulan=mulan,
     dataset=dataset,
-    num_train_steps=5000,
+    num_train_steps=500000,
     batch_size=2,
 )
 trainer.train(SimpleLogger())
