@@ -181,6 +181,8 @@ class FabricTrainer:
             if log_fn is not None:
                 log_fn(logs)
 
+            self.current_step += 1
+
 
 def _collate_one_or_multiple_tensors(fn):
     @wraps(fn)
