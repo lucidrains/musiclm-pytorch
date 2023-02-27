@@ -68,7 +68,7 @@ class FabricTrainer:
 
         # split for validation
         if valid_frac > 0:
-            train_size = int((1 - valid_frac)) * len(self.ds)
+            train_size = int((1 - valid_frac) * len(self.ds))
             valid_size = len(self.ds) - train_size
             self.train_ds, self.valid_ds = random_split(
                 self.ds,
@@ -168,15 +168,15 @@ class FabricTrainer:
                 logs["loss"] += averaged_loss.item()
 
             if self.max_grad_norm:
-                scaler = getattr(self.fabric.precision, "scaler", None)
+                scaler = getattr(self.fabric.strategy.precision, "scaler", None)
                 if scaler is not None:
                     scaler.unscale_(self.optim)
-                torch.nn.clip_grad_norm_(self.mulan.parameters(), self.max_grad_norm)
+                torch.nn.utils.clip_grad_norm_(self.mulan.parameters(), self.max_grad_norm)
 
             self.optim.step()
             self.optim.zero_grad()
 
-            self.fabric.print(f"{steps}: loss: {logs['loss']}")
+            self.fabric.print(f"{self.current_step}: loss: {logs['loss']}")
             self.fabric.log("train_loss", logs["loss"])
             if log_fn is not None:
                 log_fn(logs)
