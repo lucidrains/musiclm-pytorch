@@ -1,0 +1,52 @@
+import wandb
+
+from data import DummyDataset
+
+from musiclm_pytorch import MuLaN, AudioSpectrogramTransformer, TextTransformer
+from musiclm_pytorch.trainer import MuLaNTrainer
+
+import torch
+
+torch.manual_seed(42)
+
+
+class SimpleLogger:
+    def __init__(self):
+        import wandb
+
+        wandb.init(project="MusicLMDummyData", name="Original")
+
+    def __call__(self, logs: dict):
+        wandb.log(logs)
+
+
+audio_transformer = AudioSpectrogramTransformer(
+    dim=512,
+    depth=6,
+    heads=8,
+    dim_head=64,
+    spec_n_fft=128,
+    spec_win_length=24,
+    spec_aug_stretch_factor=0.8,
+)
+
+text_transformer = TextTransformer(dim=512, depth=6, heads=8, dim_head=64)
+
+mulan = MuLaN(audio_transformer=audio_transformer, text_transformer=text_transformer)
+
+# get a ton of <sound, text> pairs and train
+dataset = DummyDataset(
+    num_samples=5000,
+    sample_length_audio=1024,
+    sample_length_text=256,
+    num_classes=2000,
+    seed=42,
+)
+
+trainer = MuLaNTrainer(
+    mulan=mulan,
+    dataset=dataset,
+    num_train_steps=5000,
+    batch_size=2,
+)
+trainer.train(SimpleLogger())
