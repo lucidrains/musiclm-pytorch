@@ -211,6 +211,15 @@ music = musiclm('the crystalline sounds of the piano in a ballroom', num_samples
 }
 ```
 
+```bibtex
+@inproceedings{Shukor2022EfficientVP,
+    title   = {Efficient Vision-Language Pretraining with Visual Concepts and Hierarchical Alignment},
+    author  = {Mustafa Shukor and Guillaume Couairon and Matthieu Cord},
+    booktitle = {British Machine Vision Conference},
+    year    = {2022}
+}
+```
+
 *The only truth is music.* - Jack Kerouac
 
 *Music is the universal language of mankind.* - Henry Wadsworth Longfellow
