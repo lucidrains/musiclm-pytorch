@@ -10,16 +10,10 @@ Please join <a href="https://discord.gg/xBPBXfcFHd"><img alt="Join us on Discord
 
 <a href="https://www.youtube.com/watch?v=jTrYIGxOuKQ">What's AI by Louis Bouchard</a>
 
-## Appreciation
-
-- <a href="https://stability.ai/">Stability.ai</a> for the generous sponsorship to work and open source cutting edge artificial intelligence research
-
-- <a href="https://huggingface.co/">🤗 Huggingface</a> for their <a href="https://huggingface.co/docs/accelerate/index">accelerate</a> training library
-
 ## Usage
 
 ```install
-$ pip install musiclm-pytorch
+$ pip install git+https://github.com/Lightning-Universe/musiclm-pytorch-fabric
 ```
 
 ## Usage
@@ -29,6 +23,7 @@ $ pip install musiclm-pytorch
 ```python
 import torch
 from musiclm_pytorch import MuLaN, AudioSpectrogramTransformer, TextTransformer
+from musiclm_pytorch.trainer_fabric import FabricTrainer
 
 audio_transformer = AudioSpectrogramTransformer(
     dim = 512,
@@ -53,16 +48,13 @@ mulan = MuLaN(
 )
 
 # get a ton of <sound, text> pairs and train
-
-wavs = torch.randn(2, 1024)
-texts = torch.randint(0, 20000, (2, 256))
-
-loss = mulan(wavs, texts)
-loss.backward()
+wavs, texts = ...
+dataset = ...
+trainer = FabricTrainer(mulan, dataset, num_train_steps=1000_000_000)
+trainer.train()
 
 # after much training, you can embed sounds and text into a joint embedding space
 # for conditioning the audio LM
-
 embeds = mulan.get_audio_latents(wavs)  # during training
 
 embeds = mulan.get_text_latents(texts)  # during inference
