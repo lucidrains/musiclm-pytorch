@@ -220,6 +220,14 @@ music = musiclm('the crystalline sounds of the piano in a ballroom', num_samples
 }
 ```
 
+```bibtex
+@inproceedings{Zhai2023SigmoidLF,
+    title   = {Sigmoid Loss for Language Image Pre-Training},
+    author  = {Xiaohua Zhai and Basil Mustafa and Alexander Kolesnikov and Lucas Beyer},
+    year    = {2023}
+}
+```
+
 *The only truth is music.* - Jack Kerouac
 
 *Music is the universal language of mankind.* - Henry Wadsworth Longfellow
