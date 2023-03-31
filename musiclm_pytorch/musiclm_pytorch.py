@@ -1,5 +1,5 @@
 import math
-from functools import wraps
+from functools import wraps, partial
 
 import torch
 import torch.nn.functional as F
