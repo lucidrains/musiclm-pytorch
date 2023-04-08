@@ -503,8 +503,8 @@ class AudioSpectrogramTransformer(nn.Module):
 
 # text transformer
 
-@beartype
 class TextTransformer(nn.Module):
+    @beartype
     def __init__(
         self,
         dim,
@@ -546,6 +546,7 @@ class TextTransformer(nn.Module):
     def device(self):
         return next(self.parameters()).device
 
+    @beartype
     def forward(
         self,
         x = None,
@@ -648,8 +649,8 @@ class MultiLayerContrastiveLoss(nn.Module):
 
 # main classes
 
-@beartype
 class MuLaN(nn.Module):
+    @beartype
     def __init__(
         self,
         audio_transformer: AudioSpectrogramTransformer,
@@ -705,6 +706,7 @@ class MuLaN(nn.Module):
 
         return out, audio_layers
 
+    @beartype
     def get_text_latents(
         self,
         texts = None,
@@ -720,6 +722,7 @@ class MuLaN(nn.Module):
 
         return out, text_layers
 
+    @beartype
     def forward(
         self,
         wavs,
@@ -766,8 +769,8 @@ class MuLaN(nn.Module):
 
 # music lm
 
-@beartype
 class MuLaNEmbedQuantizer(AudioConditionerBase):
+    @beartype
     def __init__(
         self,
         mulan: MuLaN,
@@ -851,8 +854,8 @@ class MuLaNEmbedQuantizer(AudioConditionerBase):
         cond_embeddings = cond_embeddings.gather(2, indices)
         return rearrange(cond_embeddings, 'b q 1 d -> b q d')
 
-@beartype
 class MusicLM(nn.Module):
+    @beartype
     def __init__(
         self,
         audio_lm: AudioLM,
