@@ -129,8 +129,8 @@ After much training on all three transformers (semantic, coarse, fine), you will
 from musiclm_pytorch import MusicLM
 
 musiclm = MusicLM(
-    audio_lm = audio_lm,
-    mulan_embed_quantizer = mulan_embed_quantizer
+    audio_lm = audio_lm,                 # `AudioLM` from https://github.com/lucidrains/audiolm-pytorch
+    mulan_embed_quantizer = quantizer    # the `MuLaNEmbedQuantizer` from above
 )
 
 music = musiclm('the crystalline sounds of the piano in a ballroom', num_samples = 4) # sample 4 and pick the top match with mulan
