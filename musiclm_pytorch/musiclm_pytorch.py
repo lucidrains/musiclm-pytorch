@@ -10,6 +10,9 @@ from torchaudio.transforms import Spectrogram, TimeStretch, FrequencyMasking, Ti
 from audiolm_pytorch import AudioLM
 from audiolm_pytorch.utils import AudioConditionerBase
 
+import torch.distributed as dist
+from musiclm_pytorch.distributed import all_gather
+
 from x_clip.tokenizer import tokenizer
 from vector_quantize_pytorch import ResidualVQ
 
@@ -263,15 +266,27 @@ class SoftmaxContrastiveLearning(nn.Module):
         self.temperatures = nn.Parameter(torch.ones(layers, 1, 1) * math.log(init_temp))
         self.decoupled_contrastive_learning = decoupled_contrastive_learning
 
+        self.needs_all_gather = dist.is_initialized() and dist.get_world_size() > 1
+
     @property
     def device(self):
         return next(self.parameters()).device
 
-    def forward(self, sims):
-        batch = sims.shape[-1]
+    def forward(self, audio_latents, text_latents):
+        if audio_latents.ndim == 2:
+            audio_latents = rearrange(audio_latents, '... -> 1 ...')
 
-        if sims.ndim == 2:
-            sims = rearrange(sims, 'i j -> 1 i j')
+        if text_latents.ndim == 2:
+            text_latents = rearrange(text_latents, '... -> 1 ...')
+
+        batch = audio_latents.shape[1]
+
+        if self.needs_all_gather:
+            latents = torch.stack((audio_latents, text_latents))
+            latents = all_gather(latents, 2, None)
+            audio_latents, text_latents = latents
+
+        sims = einsum('l i d, l j d -> l i j', audio_latents, text_latents)
 
         sims = sims * self.temperatures.exp()
 
@@ -309,11 +324,17 @@ class SigmoidContrastiveLearning(nn.Module):
     def device(self):
         return next(self.parameters()).device
 
-    def forward(self, sims):
-        if sims.ndim == 2:
-            sims = rearrange(sims, 'i j -> 1 i j')
+    def forward(self, audio_latents, text_latents):
+        if audio_latents.ndim == 2:
+            audio_latents = rearrange(audio_latents, '... -> 1 ...')
 
-        n = sims.shape[-1]
+        if text_latents.ndim == 2:
+            text_latents = rearrange(text_latents, '... -> 1 ...')
+
+        n = audio_latents.shape[1]
+
+        sims = einsum('l i d, l j d -> l i j', audio_latents, text_latents)
+
         sims = sims * self.temperatures.exp() + self.bias
         labels = 2 * rearrange(torch.eye(n), 'i j -> 1 i j') - torch.ones_like(sims)
 
@@ -643,9 +664,7 @@ class MultiLayerContrastiveLoss(nn.Module):
         text_latents = einsum('l b d, l d e -> l b e', text_embeds, self.text_latent_weight) + self.text_latent_bias
         text_latents = l2norm(text_latents)
 
-        cosine_sims = einsum('l i d, l j d -> l i j', audio_latents, text_latents)
-
-        return self.contrast(cosine_sims)
+        return self.contrast(audio_latents, text_latents)
 
 # main classes
 
@@ -743,14 +762,11 @@ class MuLaN(nn.Module):
         if return_similarities:
             return einsum('i d, i d -> i', audio_latents, text_latents)
 
-        cosine_sim = einsum('i d, j d -> i j', audio_latents, text_latents)
-
-        assert cosine_sim.shape[0] == cosine_sim.shape[1], 'batch sizes for audio and text are not equal'
-
         if return_pairwise_similarities:
+            cosine_sim = einsum('i d, j d -> i j', audio_latents, text_latents)
             return cosine_sim
 
-        cl_loss = self.contrast(cosine_sim)
+        cl_loss = self.contrast(audio_latents, text_latents)
 
         if not exists(self.multi_layer_contrastive_learning):
             return cl_loss
