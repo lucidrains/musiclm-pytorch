@@ -11,7 +11,7 @@ from audiolm_pytorch import AudioLM
 from audiolm_pytorch.utils import AudioConditionerBase
 
 import torch.distributed as dist
-from musiclm_pytorch.distributed import all_gather, all_gather_all_reduce_grads
+from musiclm_pytorch.distributed import AllGather
 
 from x_clip.tokenizer import tokenizer
 from vector_quantize_pytorch import ResidualVQ
@@ -266,7 +266,7 @@ class SoftmaxContrastiveLearning(nn.Module):
         self.temperatures = nn.Parameter(torch.ones(layers, 1, 1) * math.log(init_temp))
         self.decoupled_contrastive_learning = decoupled_contrastive_learning
 
-        self.needs_all_gather = dist.is_initialized() and dist.get_world_size() > 1
+        self.all_gather = AllGather(dim = 2)
 
     @property
     def device(self):
@@ -281,9 +281,9 @@ class SoftmaxContrastiveLearning(nn.Module):
 
         batch = audio_latents.shape[1]
 
-        if self.needs_all_gather:
+        if self.all_gather.is_distributed:
             latents = torch.stack((audio_latents, text_latents))
-            latents, _ = all_gather(latents, 2, None)
+            latents, _ = self.all_gather(latents)
             audio_latents, text_latents = latents
 
         sims = einsum('l i d, l j d -> l i j', audio_latents, text_latents)
@@ -320,7 +320,7 @@ class SigmoidContrastiveLearning(nn.Module):
         self.temperatures = nn.Parameter(torch.ones(layers, 1, 1) * math.log(init_temp))
         self.bias = nn.Parameter(torch.ones(layers, 1, 1) * init_bias)
 
-        self.needs_all_gather = dist.is_initialized() and dist.get_world_size() > 1
+        self.all_gather = AllGather(dim = 1, all_reduce_grads = True)
 
     @property
     def device(self):
@@ -335,8 +335,7 @@ class SigmoidContrastiveLearning(nn.Module):
         if text_latents.ndim == 2:
             text_latents = rearrange(text_latents, '... -> 1 ...')
 
-        if self.needs_all_gather:
-            text_latents, batch_sizes = all_gather_all_reduce_grads(text_latents, 1, None)
+        text_latents, rank_sizes = self.all_gather(text_latents)
 
         n = text_latents.shape[1]
 
@@ -346,8 +345,8 @@ class SigmoidContrastiveLearning(nn.Module):
 
         labels = torch.eye(n, device = device)
 
-        if self.needs_all_gather:
-            labels_by_ranks = labels.split(batch_sizes.tolist(), dim = 0)
+        if exists(rank_sizes):
+            labels_by_ranks = labels.split(rank_sizes.tolist(), dim = 0)
             labels = labels_by_ranks[dist.get_rank()]
 
         labels = 2 * rearrange(labels, 'i j -> 1 i j') - torch.ones_like(sims)

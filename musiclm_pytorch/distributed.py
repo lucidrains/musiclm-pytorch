@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 from torch.autograd import Function
 import torch.distributed as distributed
 
@@ -33,37 +34,42 @@ def all_gather_variable_dim(t, dim = 0, sizes = None):
 
     return gathered_tensor, sizes
 
-class AllGather(Function):
+class AllGatherFunction(Function):
     @staticmethod
-    def forward(ctx, x, dim, sizes):
-        assert distributed.is_initialized() and distributed.get_world_size() > 1
+    def forward(ctx, x, dim, sizes, all_reduce_grads):
         x, batch_sizes = all_gather_variable_dim(x, dim = dim, sizes = sizes)
-        ctx.batch_sizes = batch_sizes.tolist()
         ctx.dim = dim
+        ctx.all_reduce_grads = all_reduce_grads
+        ctx.batch_sizes = batch_sizes.tolist()
         return x, batch_sizes
 
     @staticmethod
     def backward(ctx, grads, _):
         batch_sizes, rank = ctx.batch_sizes, distributed.get_rank()
+        if ctx.all_reduce_grads:
+            distributed.all_reduce(grads)
+
         grads_by_rank = grads.split(batch_sizes, dim = ctx.dim)
-        return grads_by_rank[rank], None, None
+        return grads_by_rank[rank], None, None, None
 
-all_gather = AllGather.apply
+class AllGather(nn.Module):
+    def __init__(
+        self,
+        dim,
+        *,
+        all_reduce_grads = False
+    ):
+        super().__init__()
+        self.dim = dim
+        self.all_reduce_grads = all_reduce_grads
+        self.is_distributed = distributed.is_initialized() and distributed.get_world_size() > 1
 
-class AllGatherAllReduceGrads(Function):
-    @staticmethod
-    def forward(ctx, x, dim, sizes):
-        assert distributed.is_initialized() and distributed.get_world_size() > 1
-        x, batch_sizes = all_gather_variable_dim(x, dim = dim, sizes = sizes)
-        ctx.batch_sizes = batch_sizes.tolist()
-        ctx.dim = dim
-        return x, batch_sizes
+    def forward(
+        self,
+        x,
+        sizes = None
+    ):
+        if not self.is_distributed:
+            return x, None
 
-    @staticmethod
-    def backward(ctx, grads, _):
-        distributed.all_reduce(grads)
-        batch_sizes, rank = ctx.batch_sizes, distributed.get_rank()
-        grads_by_rank = grads.split(batch_sizes, dim = ctx.dim)
-        return grads_by_rank[rank], None, None
-
-all_gather_all_reduce_grads = AllGatherAllReduceGrads.apply
+        return AllGatherFunction.apply(x, self.dim, sizes, self.all_reduce_grads)
