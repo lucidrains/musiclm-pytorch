@@ -283,7 +283,7 @@ class SoftmaxContrastiveLearning(nn.Module):
 
         if self.needs_all_gather:
             latents = torch.stack((audio_latents, text_latents))
-            latents = all_gather(latents, 2, None)
+            latents, _ = all_gather(latents, 2, None)
             audio_latents, text_latents = latents
 
         sims = einsum('l i d, l j d -> l i j', audio_latents, text_latents)
