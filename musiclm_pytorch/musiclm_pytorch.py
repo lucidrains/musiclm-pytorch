@@ -11,7 +11,7 @@ from audiolm_pytorch import AudioLM
 from audiolm_pytorch.utils import AudioConditionerBase
 
 import torch.distributed as dist
-from musiclm_pytorch.distributed import all_gather
+from musiclm_pytorch.distributed import all_gather, all_gather_all_reduce_grads
 
 from x_clip.tokenizer import tokenizer
 from vector_quantize_pytorch import ResidualVQ
@@ -320,23 +320,37 @@ class SigmoidContrastiveLearning(nn.Module):
         self.temperatures = nn.Parameter(torch.ones(layers, 1, 1) * math.log(init_temp))
         self.bias = nn.Parameter(torch.ones(layers, 1, 1) * init_bias)
 
+        self.needs_all_gather = dist.is_initialized() and dist.get_world_size() > 1
+
     @property
     def device(self):
         return next(self.parameters()).device
 
     def forward(self, audio_latents, text_latents):
+        device = self.device
+
         if audio_latents.ndim == 2:
             audio_latents = rearrange(audio_latents, '... -> 1 ...')
 
         if text_latents.ndim == 2:
             text_latents = rearrange(text_latents, '... -> 1 ...')
 
-        n = audio_latents.shape[1]
+        if self.needs_all_gather:
+            text_latents, batch_sizes = all_gather_all_reduce_grads(text_latents, 1, None)
+
+        n = text_latents.shape[1]
 
         sims = einsum('l i d, l j d -> l i j', audio_latents, text_latents)
 
         sims = sims * self.temperatures.exp() + self.bias
-        labels = 2 * rearrange(torch.eye(n), 'i j -> 1 i j') - torch.ones_like(sims)
+
+        labels = torch.eye(n, device = device)
+
+        if self.needs_all_gather:
+            labels_by_ranks = labels.split(batch_sizes.tolist(), dim = 0)
+            labels = labels_by_ranks[dist.get_rank()]
+
+        labels = 2 * rearrange(labels, 'i j -> 1 i j') - torch.ones_like(sims)
 
         return -F.logsigmoid(labels * sims).sum() / n
 

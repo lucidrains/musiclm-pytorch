@@ -49,3 +49,21 @@ class AllGather(Function):
         return grads_by_rank[rank], None, None
 
 all_gather = AllGather.apply
+
+class AllGatherAllReduceGrads(Function):
+    @staticmethod
+    def forward(ctx, x, dim, sizes):
+        assert distributed.is_initialized() and distributed.get_world_size() > 1
+        x, batch_sizes = all_gather_variable_dim(x, dim = dim, sizes = sizes)
+        ctx.batch_sizes = batch_sizes.tolist()
+        ctx.dim = dim
+        return x, batch_sizes
+
+    @staticmethod
+    def backward(ctx, grads, _):
+        distributed.all_reduce(grads)
+        batch_sizes, rank = ctx.batch_sizes, distributed.get_rank()
+        grads_by_rank = grads.split(batch_sizes, dim = ctx.dim)
+        return grads_by_rank[rank], None, None
+
+all_gather_all_reduce_grads = AllGatherAllReduceGrads.apply
